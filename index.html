@@ -215,7 +215,7 @@
         </button>
 
         <button id="playStopBtn" class="btn btn-play">
-            <span>▶️ Diffuser les fréquences (10 min)</span>
+            <span>▶️ Diffuser les fréquences</span>
         </button>
 
         <div id="status" class="status-box">Prêt pour l'écoute</div>
@@ -3563,7 +3563,7 @@ stopPlayback("Diffusion arrêtée manuellement");
 
      
 
-             let sequenceIntervalId = null; // À ajouter avec tes variables en haut du script
+                   let sequenceIntervalId = null; // À garder avec tes variables en haut du script
 
         function startPlayback() {
             if (matchedFrequenciesList.length === 0) return;
@@ -3611,31 +3611,36 @@ stopPlayback("Diffusion arrêtée manuellement");
             playNextFreq(currentIndex);
             osc.start();
 
-            // Passe à la fréquence suivante toutes les 1 seconde (en boucle)
+            // Passe à la fréquence suivante toutes les 10 secondes (10 000 ms)
             sequenceIntervalId = setInterval(() => {
-                currentIndex = (currentIndex + 1) % matchedFrequenciesList.length;
-                playNextFreq(currentIndex);
-            }, 1000);
+                currentIndex++;
+                if (currentIndex < matchedFrequenciesList.length) {
+                    playNextFreq(currentIndex);
+                }
+            }, 10000);
 
             isPlaying = true;
-            let remainingTime = PLAYBACK_DURATION;
-            playStopBtn.innerHTML = "⏹️ Arrêter (" + formatTime(remainingTime) + ")";
+            // Calcul dynamique : 10 secondes par fréquence trouvée
+            const totalDurationSeconds = matchedFrequenciesList.length * 10;
+            let remainingTime = totalDurationSeconds;
+
+            playStopBtn.innerHTML = "<span>⏹️ Arrêter (" + formatTime(remainingTime) + ")</span>";
             playStopBtn.classList.add('playing');
-            statusDiv.innerText = "Diffusion Rife active (arrêt auto dans " + formatTime(remainingTime) + ")";
+            statusDiv.innerText = "Diffusion Rife active (" + (currentIndex + 1) + "/" + matchedFrequenciesList.length + " - arrêt dans " + formatTime(remainingTime) + ")";
 
             // Décompte chaque seconde sur le bouton et le statut
             playbackCountdownId = setInterval(() => {
                 remainingTime--;
                 if (remainingTime > 0) {
-                    playStopBtn.innerHTML = "⏹️ Arrêter (" + formatTime(remainingTime) + ")";
-                    statusDiv.innerText = "Diffusion Rife active (arrêt auto dans " + formatTime(remainingTime) + ")";
+                    playStopBtn.innerHTML = "<span>⏹️ Arrêter (" + formatTime(remainingTime) + ")</span>";
+                    statusDiv.innerText = "Diffusion Rife active (" + (currentIndex + 1) + "/" + matchedFrequenciesList.length + " - arrêt dans " + formatTime(remainingTime) + ")";
                 }
             }, 1000);
 
-            // Arrêt automatique à la fin de PLAYBACK_DURATION
+            // Arrêt automatique une fois que toutes les fréquences ont été jouées 10 secondes chacune
             playbackTimeoutId = setTimeout(() => {
-                stopPlayback("Diffusion terminée (10 minutes écoulées)");
-            }, PLAYBACK_DURATION * 1000);
+                stopPlayback("Diffusion terminée (" + matchedFrequenciesList.length + " fréquences jouées)");
+            }, totalDurationSeconds * 1000);
         }
 
         function stopPlayback(statusMessage) {
@@ -3660,10 +3665,12 @@ stopPlayback("Diffusion arrêtée manuellement");
             }
 
             isPlaying = false;
-            playStopBtn.innerHTML = "▶️ Diffuser les fréquences (10 min)";
+            const totalDurationSeconds = matchedFrequenciesList.length * 10;
+            playStopBtn.innerHTML = "<span>▶️ Diffuser les fréquences (" + formatTime(totalDurationSeconds) + ")</span>";
             playStopBtn.classList.remove('playing');
             statusDiv.innerText = statusMessage || "Diffusion arrêtée";
         }
+
 
          // Génère un petit bip doux à la fin de l'analyse
         function playEndBeep() {
