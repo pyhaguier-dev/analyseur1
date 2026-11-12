@@ -3563,7 +3563,7 @@ stopPlayback("Diffusion arrêtée manuellement");
 
      
 
-                   let sequenceIntervalId = null; // À garder avec tes variables en haut du script
+                      let sequenceIntervalId = null; // À garder avec tes variables en haut du script
 
         function startPlayback() {
             if (matchedFrequenciesList.length === 0) return;
@@ -3587,6 +3587,16 @@ stopPlayback("Diffusion arrêtée manuellement");
             activeOscillators = new Array(osc);
             let currentIndex = 0;
 
+            const totalDurationSeconds = matchedFrequenciesList.length * 10;
+            let remainingTime = totalDurationSeconds;
+            let elapsedTime = 0;
+
+            // Met à jour le texte de statut avec la fréquence en cours et le temps écoulé
+            function updatePlaybackStatus() {
+                const currentFreq = matchedFrequenciesList[currentIndex];
+                statusDiv.innerText = "Diffusion des fréquences : " + currentFreq + " Hz (" + (currentIndex + 1) + "/" + matchedFrequenciesList.length + ") — Temps écoulé : " + formatTime(elapsedTime);
+            }
+
             function playNextFreq(index) {
                 const freq = matchedFrequenciesList[index];
                 let weight = 1.0;
@@ -3605,6 +3615,7 @@ stopPlayback("Diffusion arrêtée manuellement");
 
                 osc.frequency.setValueAtTime(freq, playbackAudioCtx.currentTime);
                 freqGain.gain.setValueAtTime(weight, playbackAudioCtx.currentTime);
+                updatePlaybackStatus();
             }
 
             // Démarre immédiatement avec la première fréquence
@@ -3620,26 +3631,22 @@ stopPlayback("Diffusion arrêtée manuellement");
             }, 10000);
 
             isPlaying = true;
-            // Calcul dynamique : 10 secondes par fréquence trouvée
-            const totalDurationSeconds = matchedFrequenciesList.length * 10;
-            let remainingTime = totalDurationSeconds;
-
             playStopBtn.innerHTML = "<span>⏹️ Arrêter (" + formatTime(remainingTime) + ")</span>";
             playStopBtn.classList.add('playing');
-            statusDiv.innerText = "Diffusion Rife active (" + (currentIndex + 1) + "/" + matchedFrequenciesList.length + " - arrêt dans " + formatTime(remainingTime) + ")";
 
-            // Décompte chaque seconde sur le bouton et le statut
+            // Décompte chaque seconde sur le bouton et met à jour le temps écoulé
             playbackCountdownId = setInterval(() => {
                 remainingTime--;
+                elapsedTime++;
                 if (remainingTime > 0) {
                     playStopBtn.innerHTML = "<span>⏹️ Arrêter (" + formatTime(remainingTime) + ")</span>";
-                    statusDiv.innerText = "Diffusion Rife active (" + (currentIndex + 1) + "/" + matchedFrequenciesList.length + " - arrêt dans " + formatTime(remainingTime) + ")";
+                    updatePlaybackStatus();
                 }
             }, 1000);
 
-            // Arrêt automatique une fois que toutes les fréquences ont été jouées 10 secondes chacune
+            // Arrêt automatique à la fin de la séquence complète
             playbackTimeoutId = setTimeout(() => {
-                stopPlayback("Diffusion terminée (" + matchedFrequenciesList.length + " fréquences jouées)");
+                stopPlayback("Diffusion terminée (" + matchedFrequenciesList.length + " fréquences jouées en " + formatTime(totalDurationSeconds) + ")");
             }, totalDurationSeconds * 1000);
         }
 
@@ -3670,7 +3677,6 @@ stopPlayback("Diffusion arrêtée manuellement");
             playStopBtn.classList.remove('playing');
             statusDiv.innerText = statusMessage || "Diffusion arrêtée";
         }
-
 
          // Génère un petit bip doux à la fin de l'analyse
         function playEndBeep() {
