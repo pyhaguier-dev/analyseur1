@@ -3628,7 +3628,7 @@ stopPlayback("Diffusion arrêtée manuellement");
                 if (currentIndex < matchedFrequenciesList.length) {
                     playNextFreq(currentIndex);
                 }
-            }, 1000);
+            }, 10000);
 
             isPlaying = true;
             playStopBtn.innerHTML = "<span>⏹️ Arrêter (" + formatTime(remainingTime) + ")</span>";
